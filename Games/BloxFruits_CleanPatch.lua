@@ -8,8 +8,9 @@
 local CONFIG = {
     BaseScriptUrl = "https://raw.githubusercontent.com/Ahmadzaky404/ZakyQuantumGuard/main/Games/BloxFruits.lua",
     EnableBrandingOverride = true,
-    EnablePlayerAutoAttackGui = true,
-    EnableMainFarmGui = true,
+    EnablePlayerAutoAttackGui = false,
+    EnableMainFarmGui = false,
+    EnableTabbedGui = true,
     BrandMap = {
         { "Quantum Onyx Project", "Zaky Quantum Project" },
         { "Quantum Onyx", "Zaky Quantum" },
@@ -26,6 +27,405 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local function getCharacter()
     return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+end
+
+local function createTabbedGui()
+    if not CONFIG.EnableTabbedGui then
+        return
+    end
+
+    if PlayerGui:FindFirstChild("ZQ_TabbedGUI") then
+        return
+    end
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "ZQ_TabbedGUI"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.Parent = PlayerGui
+
+    local frame = Instance.new("Frame")
+    frame.Name = "Main"
+    frame.Size = UDim2.fromOffset(332, 280)
+    frame.Position = UDim2.fromOffset(14, 220)
+    frame.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
+    frame.BorderSizePixel = 0
+    frame.Parent = gui
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -12, 0, 24)
+    title.Position = UDim2.fromOffset(6, 4)
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 13
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.Text = "Zaky Quantum Project"
+    title.Parent = frame
+
+    local tabBar = Instance.new("Frame")
+    tabBar.Size = UDim2.new(1, -12, 0, 30)
+    tabBar.Position = UDim2.fromOffset(6, 30)
+    tabBar.BackgroundTransparency = 1
+    tabBar.Parent = frame
+
+    local homeTab = Instance.new("TextButton")
+    homeTab.Size = UDim2.new(0.5, -3, 1, 0)
+    homeTab.Position = UDim2.fromOffset(0, 0)
+    homeTab.BackgroundColor3 = Color3.fromRGB(30, 90, 45)
+    homeTab.BorderSizePixel = 0
+    homeTab.Font = Enum.Font.GothamBold
+    homeTab.TextSize = 12
+    homeTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+    homeTab.Text = "Home"
+    homeTab.Parent = tabBar
+
+    local playerTab = Instance.new("TextButton")
+    playerTab.Size = UDim2.new(0.5, -3, 1, 0)
+    playerTab.Position = UDim2.new(0.5, 3, 0, 0)
+    playerTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    playerTab.BorderSizePixel = 0
+    playerTab.Font = Enum.Font.GothamBold
+    playerTab.TextSize = 12
+    playerTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+    playerTab.Text = "Player"
+    playerTab.Parent = tabBar
+
+    local content = Instance.new("Frame")
+    content.Size = UDim2.new(1, -12, 1, -68)
+    content.Position = UDim2.fromOffset(6, 62)
+    content.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+    content.BorderSizePixel = 0
+    content.Parent = frame
+
+    local homePage = Instance.new("Frame")
+    homePage.Size = UDim2.fromScale(1, 1)
+    homePage.BackgroundTransparency = 1
+    homePage.Visible = true
+    homePage.Parent = content
+
+    local playerPage = Instance.new("Frame")
+    playerPage.Size = UDim2.fromScale(1, 1)
+    playerPage.BackgroundTransparency = 1
+    playerPage.Visible = false
+    playerPage.Parent = content
+
+    local function createSlider(parent, yOffset, labelText, minValue, maxValue, defaultValue, color, onChanged)
+        local value = defaultValue
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, -8, 0, 20)
+        label.Position = UDim2.fromOffset(4, yOffset)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.Gotham
+        label.TextSize = 12
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextColor3 = Color3.fromRGB(225, 225, 225)
+        label.Parent = parent
+
+        local track = Instance.new("Frame")
+        track.Size = UDim2.new(1, -10, 0, 8)
+        track.Position = UDim2.fromOffset(5, yOffset + 21)
+        track.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        track.BorderSizePixel = 0
+        track.Parent = parent
+
+        local fill = Instance.new("Frame")
+        fill.Size = UDim2.fromScale(0, 1)
+        fill.BackgroundColor3 = color
+        fill.BorderSizePixel = 0
+        fill.Parent = track
+
+        local knob = Instance.new("Frame")
+        knob.Size = UDim2.fromOffset(12, 12)
+        knob.Position = UDim2.fromOffset(-6, -2)
+        knob.BackgroundColor3 = Color3.fromRGB(230, 230, 230)
+        knob.BorderSizePixel = 0
+        knob.Parent = track
+
+        local dragging = false
+
+        local function setValue(v)
+            value = math.clamp(math.floor(v + 0.5), minValue, maxValue)
+            label.Text = ("%s: %d"):format(labelText, value)
+            local alpha = (value - minValue) / (maxValue - minValue)
+            fill.Size = UDim2.fromScale(alpha, 1)
+            knob.Position = UDim2.new(alpha, -6, 0, -2)
+            if onChanged then
+                onChanged(value)
+            end
+        end
+
+        local function setFromInput(input)
+            local alpha = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+            setValue(minValue + (maxValue - minValue) * alpha)
+        end
+
+        track.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                setFromInput(input)
+            end
+        end)
+
+        knob.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                setFromInput(input)
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                setFromInput(input)
+            end
+        end)
+
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+
+        setValue(defaultValue)
+        return function()
+            return value
+        end
+    end
+
+    local farmState = {
+        autoFarm = false,
+        takeQuest = false,
+        farmDistance = 10,
+        bringRadius = 200,
+        attackInterval = 0.12,
+        bringInterval = 0.2,
+        questInterval = 2.0,
+        lastAttack = 0,
+        lastBring = 0,
+        lastQuest = 0,
+    }
+
+    local playerState = {
+        autoAttack = false,
+        attackRange = 36,
+        attackInterval = 0.12,
+        lastAttack = 0,
+    }
+
+    local autoFarmToggle = Instance.new("TextButton")
+    autoFarmToggle.Size = UDim2.new(0.5, -3, 0, 34)
+    autoFarmToggle.Position = UDim2.fromOffset(0, 6)
+    autoFarmToggle.BackgroundColor3 = Color3.fromRGB(120, 30, 30)
+    autoFarmToggle.BorderSizePixel = 0
+    autoFarmToggle.Font = Enum.Font.GothamBold
+    autoFarmToggle.TextSize = 12
+    autoFarmToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    autoFarmToggle.Text = "Auto Farm: OFF"
+    autoFarmToggle.Parent = homePage
+
+    local takeQuestToggle = Instance.new("TextButton")
+    takeQuestToggle.Size = UDim2.new(0.5, -3, 0, 34)
+    takeQuestToggle.Position = UDim2.new(0.5, 3, 0, 6)
+    takeQuestToggle.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+    takeQuestToggle.BorderSizePixel = 0
+    takeQuestToggle.Font = Enum.Font.GothamBold
+    takeQuestToggle.TextSize = 12
+    takeQuestToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    takeQuestToggle.Text = "Take Quest: OFF"
+    takeQuestToggle.Parent = homePage
+
+    local homeStatus = Instance.new("TextLabel")
+    homeStatus.Size = UDim2.new(1, -8, 0, 22)
+    homeStatus.Position = UDim2.fromOffset(4, 180)
+    homeStatus.BackgroundTransparency = 1
+    homeStatus.Font = Enum.Font.Gotham
+    homeStatus.TextSize = 11
+    homeStatus.TextXAlignment = Enum.TextXAlignment.Left
+    homeStatus.TextColor3 = Color3.fromRGB(180, 180, 180)
+    homeStatus.Text = "Status: Idle"
+    homeStatus.Parent = homePage
+
+    createSlider(homePage, 48, "Farm Distance", 3, 30, farmState.farmDistance, Color3.fromRGB(33, 175, 90), function(v)
+        farmState.farmDistance = v
+    end)
+
+    createSlider(homePage, 106, "Bring Radius", 40, 450, farmState.bringRadius, Color3.fromRGB(90, 140, 230), function(v)
+        farmState.bringRadius = v
+    end)
+
+    local playerAttackToggle = Instance.new("TextButton")
+    playerAttackToggle.Size = UDim2.new(1, 0, 0, 36)
+    playerAttackToggle.Position = UDim2.fromOffset(0, 6)
+    playerAttackToggle.BackgroundColor3 = Color3.fromRGB(120, 30, 30)
+    playerAttackToggle.BorderSizePixel = 0
+    playerAttackToggle.Font = Enum.Font.GothamBold
+    playerAttackToggle.TextSize = 12
+    playerAttackToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    playerAttackToggle.Text = "Auto Attack: OFF"
+    playerAttackToggle.Parent = playerPage
+
+    local playerStatus = Instance.new("TextLabel")
+    playerStatus.Size = UDim2.new(1, -8, 0, 22)
+    playerStatus.Position = UDim2.fromOffset(4, 180)
+    playerStatus.BackgroundTransparency = 1
+    playerStatus.Font = Enum.Font.Gotham
+    playerStatus.TextSize = 11
+    playerStatus.TextXAlignment = Enum.TextXAlignment.Left
+    playerStatus.TextColor3 = Color3.fromRGB(180, 180, 180)
+    playerStatus.Text = "Status: Idle"
+    playerStatus.Parent = playerPage
+
+    createSlider(playerPage, 56, "Attack Range", 8, 120, playerState.attackRange, Color3.fromRGB(33, 175, 90), function(v)
+        playerState.attackRange = v
+    end)
+
+    local function setTab(name)
+        local isHome = name == "Home"
+        homePage.Visible = isHome
+        playerPage.Visible = not isHome
+        homeTab.BackgroundColor3 = isHome and Color3.fromRGB(30, 90, 45) or Color3.fromRGB(45, 45, 45)
+        playerTab.BackgroundColor3 = isHome and Color3.fromRGB(45, 45, 45) or Color3.fromRGB(30, 90, 45)
+    end
+
+    homeTab.MouseButton1Click:Connect(function()
+        setTab("Home")
+    end)
+    playerTab.MouseButton1Click:Connect(function()
+        setTab("Player")
+    end)
+
+    autoFarmToggle.MouseButton1Click:Connect(function()
+        farmState.autoFarm = not farmState.autoFarm
+        if farmState.autoFarm then
+            autoFarmToggle.Text = "Auto Farm: ON"
+            autoFarmToggle.BackgroundColor3 = Color3.fromRGB(24, 120, 45)
+            homeStatus.Text = "Status: Farming..."
+        else
+            autoFarmToggle.Text = "Auto Farm: OFF"
+            autoFarmToggle.BackgroundColor3 = Color3.fromRGB(120, 30, 30)
+            homeStatus.Text = "Status: Idle"
+        end
+    end)
+
+    takeQuestToggle.MouseButton1Click:Connect(function()
+        farmState.takeQuest = not farmState.takeQuest
+        if farmState.takeQuest then
+            takeQuestToggle.Text = "Take Quest: ON"
+            takeQuestToggle.BackgroundColor3 = Color3.fromRGB(24, 120, 45)
+        else
+            takeQuestToggle.Text = "Take Quest: OFF"
+            takeQuestToggle.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+        end
+    end)
+
+    playerAttackToggle.MouseButton1Click:Connect(function()
+        playerState.autoAttack = not playerState.autoAttack
+        if playerState.autoAttack then
+            playerAttackToggle.Text = "Auto Attack: ON"
+            playerAttackToggle.BackgroundColor3 = Color3.fromRGB(24, 120, 45)
+            playerStatus.Text = "Status: Hunting enemy..."
+        else
+            playerAttackToggle.Text = "Auto Attack: OFF"
+            playerAttackToggle.BackgroundColor3 = Color3.fromRGB(120, 30, 30)
+            playerStatus.Text = "Status: Idle"
+        end
+    end)
+
+    local dragging = false
+    local dragInput, dragStart, startPos
+    title.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            dragInput = input
+        end
+    end)
+    title.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+
+    RunService.Heartbeat:Connect(function()
+        local now = os.clock()
+        local character = getCharacter()
+        local myRoot = getRootPart(character)
+        if not myRoot then
+            return
+        end
+
+        if playerState.autoAttack and (now - playerState.lastAttack >= playerState.attackInterval) then
+            local target = getEnemyTarget(playerState.attackRange)
+            if target then
+                local tool = character:FindFirstChildOfClass("Tool")
+                if tool then
+                    tool:Activate()
+                    playerState.lastAttack = now
+                    playerStatus.Text = "Status: Attacking " .. target.Name
+                end
+            else
+                playerStatus.Text = "Status: No enemy in range"
+            end
+        end
+
+        if farmState.autoFarm then
+            local target = getEnemyTarget(farmState.bringRadius)
+            if not target then
+                homeStatus.Text = "Status: No enemy in range"
+                return
+            end
+
+            local targetRoot = getRootPart(target)
+            if not targetRoot then
+                return
+            end
+
+            homeStatus.Text = "Status: Farming " .. target.Name
+            myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, farmState.farmDistance)
+
+            if now - farmState.lastBring >= farmState.bringInterval then
+                farmState.lastBring = now
+                local list = getAliveEnemiesInRange(myRoot.Position, farmState.bringRadius)
+                for i, enemy in ipairs(list) do
+                    if enemy ~= target then
+                        local enemyRoot = getRootPart(enemy)
+                        if enemyRoot then
+                            local side = (i % 2 == 0) and 2 or -2
+                            enemyRoot.CFrame = targetRoot.CFrame * CFrame.new(side, 0, -2 - (i % 4))
+                        end
+                    end
+                end
+            end
+
+            if now - farmState.lastAttack >= farmState.attackInterval then
+                farmState.lastAttack = now
+                local tool = character:FindFirstChildOfClass("Tool")
+                if tool then
+                    tool:Activate()
+                end
+            end
+
+            if farmState.takeQuest and now - farmState.lastQuest >= farmState.questInterval then
+                farmState.lastQuest = now
+                if tryTakeNearestQuest() then
+                    homeStatus.Text = "Status: Quest accepted"
+                end
+            end
+        end
+    end)
 end
 
 local function getRootPart(model)
@@ -705,5 +1105,4 @@ end
 
 loadBaseScript()
 task.defer(startBrandingOverride)
-task.defer(createPlayerAutoAttackGui)
-task.defer(createMainFarmGui)
+task.defer(createTabbedGui)
