@@ -1,5 +1,5 @@
 local Scripts = {
-    [994732206] = "https://raw.githubusercontent.com/Ahmadzaky404/ZakyQuantumGuard/main/Games/BloxFruits.lua",
+    [994732206] = "https://raw.githubusercontent.com/Ahmadzaky404/ZakyQuantumGuard/main/Games/BloxFruits_CleanPatch.lua",
     [9186719164] = "https://raw.githubusercontent.com/Ahmadzaky404/ZakyQuantumGuard/main/Games/SailorPiece.lua",
 }
 
