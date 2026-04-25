@@ -51,6 +51,45 @@ local Guard = (function()
         return closestModel
     end
 
+    local function applyBrandingOverride(instance)
+        if not instance or not instance:IsA("TextLabel") and not instance:IsA("TextButton") then
+            return
+        end
+
+        local text = instance.Text
+        if type(text) ~= "string" or text == "" then
+            return
+        end
+
+        local updated = text
+        updated = updated:gsub("Quantum Onyx Project", "Zaky Quantum Project")
+        updated = updated:gsub("Quantum Onyx", "Zaky Quantum")
+        updated = updated:gsub("QuantumOnyx", "ZakyQuantum")
+        if updated ~= text then
+            instance.Text = updated
+        end
+    end
+
+    local function setupBrandingOverride()
+        for _, desc in ipairs(PlayerGui:GetDescendants()) do
+            applyBrandingOverride(desc)
+        end
+
+        PlayerGui.DescendantAdded:Connect(function(desc)
+            task.defer(function()
+                applyBrandingOverride(desc)
+            end)
+        end)
+
+        task.spawn(function()
+            while task.wait(1) do
+                for _, desc in ipairs(PlayerGui:GetDescendants()) do
+                    applyBrandingOverride(desc)
+                end
+            end
+        end)
+    end
+
     local function createAutoAttackGui()
         local old = PlayerGui:FindFirstChild("ZQ_PlayerGUI")
         if old then
@@ -293,6 +332,7 @@ local Guard = (function()
 
     task.defer(function()
         print("[Guard] PlayerGui protection active")
+        setupBrandingOverride()
         createAutoAttackGui()
     end)
 end)()
